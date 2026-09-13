@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Symlinks / audio data (live in ~/Music/Drops)
+data/audio
+data/audio/*
+*.mp3
+*.wav
+*.flac
+*.m3u8
+*.cue
+
+# System
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
