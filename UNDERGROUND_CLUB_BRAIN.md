@@ -85,6 +85,7 @@ Per alimentare le ricerche future di DropAgent con massima selettività:
   * *Cabaret Recordings* (Giappone - DJ Masda, So Inagawa)
   * *Perlon* (Germania - Zip, Ricardo Villalobos, Thomas Melchior)
   * *Pleasure Club* (UK - Bobby., Harry McCanna)
+  * *Ilian Tape* (Monaco - Skee Mask, Zenker Brothers, Andrea)
   * *Telum / Amphia* (Romania - Raresh, Petre Inspirescu, Rhadoo, Cristi Cons)
   * *Time Passages* (Berlino - Binh)
   * *Yaji Records* (Giappone/Berlino)
@@ -108,8 +109,15 @@ Le conferme e gli scarti del selector definiscono la linea di demarcazione estet
   * *Feel Fly - Peach*
   * *The Mechanical Man - The Magic Number*
   * *Data Memory Access - Controller*
+  * *BOBBY. - Strange Fantasy* (Pleasure Club) — Prog-house/deep hypno da climax mentale (8A - 129 BPM)
+  * *Skee Mask - Routine* (Ilian Tape) — Breakbeat introspettivo, subacqueo e mentale (4A - 123 BPM, forzato a Warm Up per densità emotiva)
+  * *So Inagawa - Logo Queen* (Cabaret Recordings) — Microhouse pura, felpata e ipnotica a 118 BPM (10B - 118 BPM)
   * **Elementi distintivi**: Slap bass rotondi, sintetizzatori analogici caldi, arpeggiatori nostalgici anni '80/'90, melodie che toccano corde emotive profonde, vocalità sussurrate o distaccate, assenza di drop commerciali.
+
+* **Regola di Calibrazione Warm Up (BPM vs Densità Emotiva)**:
+  * Tracce fino a 122-124 BPM che non usano una cassa dritta 4/4 compressa ma si sviluppano su pad atmosferici, break sincopati e groove soffusi (come *Skee Mask - Routine*) non sono "Groove Building" per far ballare la pista, ma **strumenti di ipnosi da Warm Up** per preparare la mente del clubber.
 
 * **NO (Scarto - Filler Tecnico & Troppo Freddo)**:
   * Scartati i brani puramente meccanici, l'electro secca priva di melodia (*Einstein*), il minimal funk anonimo (*Grit Wave*) o il funk troppo giocoso/banale (*Oreo Cake*).
   * **Regola di selezione**: Una traccia deve possedere o una tensione ipnotica trascendente o una struggente bellezza melodica/analogica. Se è solo un loop per riempire spazio, viene esclusa.
+
