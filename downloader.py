@@ -37,10 +37,14 @@ class DropDownloader:
             "--no-playlist",
             url
         ]
-        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return json.loads(res.stdout)
+        try:
+            res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            return json.loads(res.stdout)
+        except Exception as e:
+            print(f"[Drop Agent] ⚠️ Metadata extraction error: {e}")
+            return {}
 
-    def download_full_mix(self, url: str, album_title: str, genre: str, filename: str = "00_Full_Continuous_Mix.mp3") -> str:
+    def download_full_mix(self, url: str, album_title: str, genre: str, filename: str = "00_Full_Continuous_Mix.mp3") -> Optional[str]:
         """
         Downloads the full continuous mix in high-quality MP3 (320k) with embedded cover art and metadata.
         """
@@ -62,9 +66,18 @@ class DropDownloader:
             "-o", out_path,
             url
         ]
-        subprocess.run(cmd, check=True)
-        print(f"[Drop Agent] ✅ Full mix saved: {out_path}")
-        return out_path
+        try:
+            subprocess.run(cmd, check=True)
+            print(f"[Drop Agent] ✅ Full mix saved: {out_path}")
+            return out_path
+        except Exception as e:
+            print(f"[Drop Agent] ⚠️ Failed to download full continuous mix: {e}")
+            if os.path.exists(out_path):
+                try:
+                    os.remove(out_path)
+                except OSError:
+                    pass
+            return None
 
     def download_single_track(self, track_num: int, artist: str, title: str, album_title: str, genre: str, year: str = "") -> Optional[str]:
         """

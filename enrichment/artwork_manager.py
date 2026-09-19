@@ -13,7 +13,15 @@ import urllib.request
 import urllib.error
 from pathlib import Path
 from typing import Optional, Tuple
-from PIL import Image, ImageDraw, ImageFont
+
+try:
+    from PIL import Image, ImageDraw, ImageFont
+    PIL_AVAILABLE = True
+except ImportError:
+    Image = None
+    ImageDraw = None
+    ImageFont = None
+    PIL_AVAILABLE = False
 
 logger = logging.getLogger("drop_agent.artwork")
 
@@ -64,6 +72,10 @@ class ArtworkManager:
         size: Optional[int] = None
     ) -> Optional[str]:
         """Processes raw image bytes into standardized high-res JPEG."""
+        if not PIL_AVAILABLE:
+            logger.warning("Pillow (PIL) is not installed. Artwork processing skipped. Install via: pip install Pillow")
+            return None
+
         dim = size or self.target_size
         try:
             img = Image.open(io.BytesIO(image_bytes))
@@ -109,11 +121,15 @@ class ArtworkManager:
         genre: Optional[str] = None,
         output_path: Optional[str] = None,
         size: Optional[int] = None
-    ) -> str:
+    ) -> Optional[str]:
         """
         Generates an elegant, minimalist vinyl/club style placeholder artwork (1400x1400)
         when no online cover art is found.
         """
+        if not PIL_AVAILABLE:
+            logger.warning("Pillow (PIL) is not installed. Fallback artwork generation skipped. Install via: pip install Pillow")
+            return None
+
         dim = size or self.target_size
         out_file = output_path or "/tmp/drops_cover.jpg"
         

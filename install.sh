@@ -100,7 +100,11 @@ else
     PY="python3"
 fi
 
-$PIP install --quiet --upgrade pip yt-dlp mutagen requests 2>/dev/null || true
+if [ -f "requirements.txt" ]; then
+    $PIP install --quiet -r requirements.txt 2>/dev/null || true
+else
+    $PIP install --quiet --upgrade pip yt-dlp mutagen requests Pillow 2>/dev/null || true
+fi
 
 # Optional AI / harmonic packages if compatible
 $PIP install --quiet numpy scipy 2>/dev/null || true
