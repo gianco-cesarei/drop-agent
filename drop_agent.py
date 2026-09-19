@@ -599,9 +599,10 @@ def run_interactive_agent():
     print(" COMMANDS:")
     print(" [1] INGEST WEB LINK   -> Paste Spotify, YouTube, SoundCloud link (320k + Camelot + CUE)")
     print(" [2] AUDIT LOCAL FOLDER-> Select local folder on disk (Computes Camelot + BPM + Rekordbox XML)")
-    print(" [3] VAULT METRICS     -> Total hours, gigabytes and breakdown of your local library\n")
+    print(" [3] VAULT METRICS     -> Total hours, gigabytes and breakdown of your local library")
+    print(" [4] CHAT (AI CURATOR) -> Parla con The Vinyl Head per consigli underground e download\n")
 
-    choice = input("👉 SELECT [1/2/3] (default 1): ").strip() or "1"
+    choice = input("👉 SELECT [1/2/3/4] (default 1): ").strip() or "1"
 
     if choice == "1":
         url = input("\n🔗 PASTE URL (Spotify / YouTube / SoundCloud): ").strip()
@@ -645,13 +646,136 @@ def run_interactive_agent():
 
     elif choice == "3":
         scan_local_vault()
+
+    elif choice == "4":
+        run_chat_with_vinyl_head()
     else:
         print("INVALID COMMAND. EXIT.")
 
 
+def run_chat_with_vinyl_head():
+    """Interactive CLI chat with The Vinyl Head powered by Gemini."""
+    import ssl
+    import urllib.request
+    import urllib.error
+
+    print("\n" + "=" * 65)
+    print(" 🖤 THE VINYL HEAD — UNDERGROUND SELECTOR BOT (AI CHAT)")
+    print("=" * 65)
+    print(" Chatta con l'agente per consigli su vinili, selezioni underground,")
+    print(" incastri armonici Camelot o per passare link da scaricare.")
+    print(" Digita 'exit' o 'quit' per uscire.\n")
+
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    env_file = os.path.expanduser("~/.drop-agent/.env")
+    if not api_key and os.path.exists(env_file):
+        try:
+            with open(env_file, "r") as ef:
+                for line in ef:
+                    if line.strip().startswith("GEMINI_API_KEY="):
+                        api_key = line.strip().split("=", 1)[1].strip().strip('"').strip("'")
+        except Exception:
+            pass
+
+    if not api_key:
+        print("💡 [Info] Per attivare la chat AI con Gemini serve una chiave gratuita.")
+        print("   Puoi ottenerla gratis su: https://aistudio.google.com/")
+        user_key = input("👉 Incolla la tua GEMINI_API_KEY (oppure premi INVIO per uscire): ").strip()
+        if user_key:
+            api_key = user_key
+            try:
+                os.makedirs(os.path.dirname(env_file), exist_ok=True)
+                with open(env_file, "a") as ef:
+                    ef.write(f"\nGEMINI_API_KEY={api_key}\n")
+                print("✓ Chiave salvata in ~/.drop-agent/.env per i prossimi utilizzi.")
+            except Exception:
+                pass
+        else:
+            print("Chat AI annullata.")
+            return
+
+    # Load Brain manifesto if available
+    brain_path = os.path.join(os.path.dirname(__file__), "UNDERGROUND_CLUB_BRAIN.md")
+    brain_text = ""
+    if os.path.exists(brain_path):
+        try:
+            with open(brain_path, "r", encoding="utf-8") as bf:
+                brain_text = bf.read()
+        except Exception:
+            pass
+
+    system_prompt = (
+        "Sei 'The Vinyl Head', l'intelligenza artificiale e selettore musicale underground di Drops.\n"
+        "Guida DJ e digger nella selezione di musica elettronica di nicchia e di altissimo livello artistico.\n"
+        "Tono: Diretto, sintetico, minimalista, esperto di club underground (Microhouse, Early 90s Proto-Trance, New Beat, Minimal Romena).\n"
+        "Zero allucinazioni: cita solo tracce ed etichette realmente esistenti. Spiega sempre la chiave Camelot (es. 8A, 11B) e i BPM.\n"
+        f"\nKNOWLEDGE MANIFESTO:\n{brain_text}"
+    )
+
+    history = []
+    ssl_ctx = ssl._create_unverified_context()
+    model_name = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+
+    print("[Head] 🎧 Ciao. Che suono o atmosfera stai cercando per il tuo set?")
+
+    while True:
+        try:
+            user_msg = input("\nTu > ").strip()
+        except (KeyboardInterrupt, EOFError):
+            print("\n[Head] Saluto underground. Alla prossima.")
+            break
+
+        if not user_msg:
+            continue
+        if user_msg.lower() in ["exit", "quit", "esci", "q"]:
+            print("[Head] Saluto underground. Alla prossima.")
+            break
+
+        # Check if message contains an audio URL
+        url_match = re.search(r"https?://[^\s]+", user_msg)
+        detected_url = url_match.group(0) if url_match else None
+
+        history.append({"role": "user", "parts": [{"text": user_msg}]})
+
+        payload = {
+            "systemInstruction": {"parts": [{"text": system_prompt}]},
+            "contents": history,
+            "generationConfig": {"temperature": 0.4, "maxOutputTokens": 1024}
+        }
+
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        req = urllib.request.Request(
+            endpoint,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"}
+        )
+
+        try:
+            with urllib.request.urlopen(req, context=ssl_ctx, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                candidates = data.get("candidates", [])
+                reply = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "") if candidates else "Nessuna risposta."
+                history.append({"role": "model", "parts": [{"text": reply}]})
+                print(f"\n[Head] 🖤 {reply.strip()}")
+        except Exception as err:
+            print(f"\n[Head] ⚠️ Errore di connessione a Gemini: {err}")
+
+        # If audio URL was present, offer instant download
+        if detected_url and any(domain in detected_url for domain in ["youtube.com", "youtu.be", "spotify.com", "soundcloud.com"]):
+            download_prompt = input(f"\n⚡ Ho rilevato il link ({detected_url}). Vuoi scaricarlo e catalogarlo a 320k ora? [y/N]: ").strip().lower()
+            if download_prompt == "y":
+                genre_in = input("🏷️ GENRE [default: Electronic]: ").strip() or "Electronic"
+                if "spotify.com" in detected_url:
+                    from spotify_resolver import ingest_spotify_link
+                    ingest_spotify_link(detected_url, genre=genre_in)
+                else:
+                    run_drop_agent(url=detected_url, genre=genre_in, export_dj_all=True)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Drop Agent — Music Intelligence, Fingerprinting & DJ Preparation Engine")
-    parser.add_argument("url", nargs="?", default=None, help="Spotify / YouTube Mix / Track / Playlist URL (optional)")
+    parser.add_argument("url", nargs="?", default=None, help="Spotify / YouTube Mix / Track / Playlist URL or 'chat' (optional)")
+    parser.add_argument("--chat", action="store_true", help="Launch conversational AI chat with The Vinyl Head")
     parser.add_argument("--genre", default="Deep House", help="Genre / Category")
     parser.add_argument("--folder", default=None, help="Target folder name inside data/audio")
     parser.add_argument("--analyze-folder", default=None, help="Analyze an existing local folder")
@@ -678,6 +802,8 @@ if __name__ == "__main__":
         scan_local_vault()
     elif args.analyze_folder:
         analyze_local_folder(args.analyze_folder, genre=args.genre)
+    elif args.chat or args.url == "chat":
+        run_chat_with_vinyl_head()
     elif not args.url:
         run_interactive_agent()
     elif "spotify.com" in args.url.lower():
