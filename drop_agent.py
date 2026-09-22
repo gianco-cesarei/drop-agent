@@ -129,13 +129,16 @@ def run_drop_agent(
     sync_db: bool = False,
     discogs_token: Optional[str] = None,
     dry_run: bool = False,
+    mode: str = "drops",
+    dropsoul_policy: str = "interactive",
 ) -> Dict[str, Any]:
+    header_name = "🔥 DROPSOUL (Hi-Fi P2P Edition)" if mode == "dropsoul" else "💧 DROP AGENT (Standard Edition)"
     print("=" * 60)
-    print(" 💧 DROP AGENT — Music Curation & Ingestion Pipeline 💧 ")
+    print(f" {header_name} — Ingestion Pipeline ")
     print("=" * 60)
 
     # 1. Fetch set info
-    temp_dl = DropDownloader(output_dir="/tmp")
+    temp_dl = DropDownloader(output_dir="/tmp", mode=mode, dropsoul_policy=dropsoul_policy)
     print(f"[Drop Agent] 📡 Ingesting Set URL: {url}")
     info = temp_dl.get_video_info(url)
     video_title = info.get("title", "Unknown DJ Set")
@@ -170,7 +173,7 @@ def run_drop_agent(
     os.makedirs(target_dir, exist_ok=True)
     print(f"[Drop Agent] 📁 Target Catalog Directory: {target_dir}")
 
-    downloader = DropDownloader(output_dir=target_dir)
+    downloader = DropDownloader(output_dir=target_dir, mode=mode, dropsoul_policy=dropsoul_policy)
 
     # Initialize Milestone 3 Enrichment
     enricher = MetadataEnricher(discogs_token=discogs_token)
@@ -795,10 +798,27 @@ if __name__ == "__main__":
     parser.add_argument("--sync-db", action="store_true", help="Sync release and track entities to Supabase Postgres")
     parser.add_argument("--discogs-token", default=None, help="Discogs API personal access token")
     parser.add_argument("--dry-run", action="store_true", help="Simulate cloud upload and database synchronization")
+    parser.add_argument("--mode", choices=["drops", "dropsoul"], default="drops", help="Ingestion engine: 'drops' (fast webrip) or 'dropsoul' (Hi-Fi P2P + Spectrogram)")
+    parser.add_argument("--dropsoul-policy", choices=["interactive", "auto_downsize", "auto_wait", "auto_skip"], default="interactive", help="DropSoul Decision Gate policy when HQ is unavailable")
+    parser.add_argument("--dropsoul-queue", action="store_true", help="Inspect pending tracks in DropSoul background hunting queue")
 
     args = parser.parse_args()
 
-    if args.vault_audit:
+    if args.dropsoul_queue:
+        from dropsoul import DropSoulQueueManager
+        qm = DropSoulQueueManager()
+        pending = qm.get_pending_hunts()
+        print("\n" + "=" * 65)
+        print(" 🔥 [DropSoul Queue] Pending High-Fidelity Hunts & Upgrades")
+        print("=" * 65)
+        if not pending:
+            print("  ✨ Nessuna traccia in attesa. Tutte le release sono verificate al 100%!")
+        else:
+            for i, p in enumerate(pending, 1):
+                badge = "[DOWNSIZED]" if p.status.value == "DOWNSIZED_PLACEHOLDER" else "[HUNTING ⏳]"
+                print(f"  {i:02d}. {badge} '{p.artist} - {p.title}' (Album: {p.album_title})")
+        print("-" * 65)
+    elif args.vault_audit:
         scan_local_vault()
     elif args.analyze_folder:
         analyze_local_folder(args.analyze_folder, genre=args.genre)
@@ -833,7 +853,9 @@ if __name__ == "__main__":
             upload_cloud=args.upload_cloud,
             sync_db=args.sync_db,
             discogs_token=args.discogs_token,
-            dry_run=args.dry_run
+            dry_run=args.dry_run,
+            mode=args.mode,
+            dropsoul_policy=args.dropsoul_policy
         )
 
 

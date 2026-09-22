@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Soulseek P2P Daemon with REST API
+  slskd:
+    image: slskd/slskd:latest
+    container_name: dropsoul-slskd
+    restart: unless-stopped
+    ports:
+      - "5030:5030"     # Web UI & REST API
+      - "50300:50300"   # Soulseek P2P Listening Port
+    environment:
+      - SLSKD_REMOTE_CONFIGURATION=true
+      - SLSKD_USERNAME=${SLSKD_USERNAME:-}
+      - SLSKD_PASSWORD=${SLSKD_PASSWORD:-}
+    volumes:
+      - ./data/slskd/app:/app
+      - ./data/slskd/downloads:/downloads
+      - ./data/audio:/music
+
+  # DropSoul Cloud Worker (Auto-Hunt, FFT Cutoff Quality Gate, R2 Upload, Supabase Sync)
+  dropsoul-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dropsoul
+    container_name: dropsoul-cloud-worker
+    restart: unless-stopped
+    depends_on:
+      - slskd
+    environment:
+      - SLSKD_URL=http://slskd:5030
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      - CLOUDFLARE_R2_ACCESS_KEY_ID=${CLOUDFLARE_R2_ACCESS_KEY_ID:-}
+      - CLOUDFLARE_R2_SECRET_ACCESS_KEY=${CLOUDFLARE_R2_SECRET_ACCESS_KEY:-}
+      - CLOUDFLARE_R2_ENDPOINT=${CLOUDFLARE_R2_ENDPOINT:-}
+      - CLOUDFLARE_R2_BUCKET=${CLOUDFLARE_R2_BUCKET:-drops-audio}
+    volumes:
+      - ./data:/app/data

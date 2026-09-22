@@ -21,10 +21,18 @@ def _clean_text(raw: str) -> str:
     return cleaned
 
 
+try:
+    from dropsoul import DropSoulEngine
+except ImportError:
+    DropSoulEngine = None
+
+
 class DropDownloader:
-    def __init__(self, output_dir: str):
+    def __init__(self, output_dir: str, mode: str = "drops", dropsoul_policy: str = "interactive"):
         self.output_dir = os.path.abspath(output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
+        self.mode = mode
+        self.dropsoul_engine = DropSoulEngine(default_policy=dropsoul_policy) if DropSoulEngine else None
 
     def get_video_info(self, url: str) -> Dict:
         """Fetch metadata for a YouTube URL."""
@@ -81,7 +89,30 @@ class DropDownloader:
 
     def download_single_track(self, track_num: int, artist: str, title: str, album_title: str, genre: str, year: str = "") -> Optional[str]:
         """
-        Searches for and downloads an individual track in top quality MP3 with ID3 metadata.
+        Downloads a single track. In 'dropsoul' mode, delegates to DropSoulEngine
+        (Soulseek P2P + Spectrogram Quality Gate + Decision Gate fallback).
+        In 'drops' mode, runs direct high-speed YouTube cascade.
+        """
+        if self.mode == "dropsoul" and self.dropsoul_engine:
+            return self.dropsoul_engine.process_track(
+                track_num=track_num,
+                artist=artist,
+                title=title,
+                album_title=album_title,
+                youtube_fallback_fn=lambda: self._download_single_track_youtube(
+                    track_num=track_num,
+                    artist=artist,
+                    title=title,
+                    album_title=album_title,
+                    genre=genre,
+                    year=year
+                )
+            )
+        return self._download_single_track_youtube(track_num, artist, title, album_title, genre, year)
+
+    def _download_single_track_youtube(self, track_num: int, artist: str, title: str, album_title: str, genre: str, year: str = "") -> Optional[str]:
+        """
+        Searches for and downloads an individual track in MP3 via YouTube.
         Uses a resilient multi-query search cascade with format and player client fallbacks.
         """
         track_str = f"{track_num:02d}"

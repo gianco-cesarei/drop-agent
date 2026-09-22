@@ -359,6 +359,7 @@ gantt
 | **M4** | Cloudflare R2 & Supabase Ingestion | **P1 (Alta)** | M2, M3 | Connessione diretta tra motore desktop e web platform |
 | **M5** | Energy Curve & Harmonic Flow Visualizer | **P2 (Media)** | M1 | Comprensione visiva delle transizioni e del mix flow |
 | **M6** | Autonomous AI Crate Digger Mode | **P2 (Innovazione)**| M4, M5 | Scoperta autonoma proattiva guidata da AI |
+| **M7** | DropSoul P2P Ingestion & Spectral Quality Gate | **P0 (Critica)**| M3, M4 | Certificazione reale >20kHz e download autonomo 24/7 nel cloud |
 
 ---
 
