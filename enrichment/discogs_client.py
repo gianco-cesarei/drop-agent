@@ -22,7 +22,7 @@ from typing import Any, Dict, Optional
 logger = logging.getLogger("drop_agent.discogs")
 
 DISCOGS_API_BASE = "https://api.discogs.com"
-DEFAULT_USER_AGENT = "DropAgent/2.0 +https://drops.giancarlocesarei.workers.dev"
+DEFAULT_USER_AGENT = "DropAgent/2.0 +https://drops.musicagent.workers.dev"
 
 
 def _clean_string(value: Optional[str]) -> str:
